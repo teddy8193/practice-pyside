@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+env:
+  NAME_LINUX: "app_${{ github.ref_name }}.bin"
+  NAME_WIN: "app_${{ github.ref_name }}.exe"
+
 jobs:
   build-linux:
     name: Build Linux binary
@@ -27,15 +31,48 @@ jobs:
       - name: Build binary with makefile
         run: poetry run make build_linux
 
+      - name: Rename binary
+        run: mv bin/app.bin bin/$NAME_LINUX
+
       - name: Upload binary to artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-linux
-          path: bin/app.bin
+          path: bin/${{ env.NAME_LINUX }}
+
+  build-win:
+    name: Build Windows binary
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+        
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install Python dependencies
+        run: poetry install
+
+      - name: Build binary with makefile
+        run: poetry run make build_win
+
+      - name: Rename binary
+        run: Rename-Item -Path "bin\app.exe" -NewName $env:NAME_WIN
+
+      - name: Upload binary to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-win
+          path: bin/${{ env.NAME_WIN }}
 
   release:
     name: Create release
-    needs: [build-linux]
+    needs: [build-linux, build-win]
     runs-on: ubuntu-latest
     steps:
       - name: Download Linux build
@@ -44,11 +81,20 @@ jobs:
           name: app-linux
           path: bin/
 
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: app-win
+          path: bin/
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: bin/app.bin
+          files: |
+            bin/${{ env.NAME_WIN }}
+            bin/${{ env.NAME_LINUX }}
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
       
         
