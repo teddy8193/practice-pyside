@@ -25,7 +25,7 @@ jobs:
         run: poetry install
 
       - name: Build binary with makefile
-        run: make build_linux
+        run: nuitka --enable-plugin=pyside6 --standalone --onefile --follow-imports --output-dir=bin simple_mvc/app.py
 
       - name: Upload binary to artifact
         uses: actions/upload-artifact@v4
