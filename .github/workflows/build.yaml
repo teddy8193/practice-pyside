@@ -24,16 +24,8 @@ jobs:
       - name: Install Python dependencies
         run: poetry install
 
-      - name: Build binary with Nuitka
-        uses: Nuitka/Nuitka-Action@main
-        with:
-          nuitka-version: main
-          script-name: simple_mvc/app.py
-          onefile: true
-          standalone: true
-          enable-plugins: pyside6
-          follow-imports: true
-          output-dir: bin
+      - name: Build binary with makefile
+        run: poetry run make build_linux
 
       - name: Upload binary to artifact
         uses: actions/upload-artifact@v4
