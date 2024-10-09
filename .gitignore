@@ -2,7 +2,4 @@
 **/__pycache__/**
 
 # Nuitka
-/app.build
-/app.dist
-/app.onefile-build
-app.bin
+/bin
