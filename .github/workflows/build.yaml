@@ -1,0 +1,54 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    name: Build Linux binary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+        
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install Python dependencies
+        run: poetry install
+
+      - name: Build binary with makefile
+        run: make build_linux
+
+      - name: Upload binary to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-linux
+          path: bin/app.bin
+
+  release:
+    name: Create release
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Linux build
+        uses: actions/download-artifact@v4
+        with:
+          name: app-linux
+          path: bin/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bin/app.bin
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+      
+        
